@@ -302,22 +302,44 @@ const buzz = pat => { if(settings.haptics && navigator.vibrate && (!navigator.us
 //  AUDIO (synthesised, no files)
 // =========================================================
 let actx=null, master=null, noiseBuf=null;
+// iOS: Web Audio follows the ring/silent switch unless the page's audio session is "playback".
+// Use navigator.audioSession where it exists (Safari 17+); otherwise loop a silent <audio> element,
+// which puts the page in the media-playback category. Unlock on real gestures (touchend/click/key),
+// and resume after the context is suspended/interrupted (app switch, phone call, screen lock).
+let silentEl=null;
+function silentWavURL(){ const n=800, b=new ArrayBuffer(44+n), v=new DataView(b), w=(o,str)=>{ for(let i=0;i<str.length;i++) v.setUint8(o+i,str.charCodeAt(i)); };
+  w(0,'RIFF'); v.setUint32(4,36+n,true); w(8,'WAVE'); w(12,'fmt '); v.setUint32(16,16,true); v.setUint16(20,1,true); v.setUint16(22,1,true);
+  v.setUint32(24,8000,true); v.setUint32(28,8000,true); v.setUint16(32,1,true); v.setUint16(34,8,true); w(36,'data'); v.setUint32(40,n,true);
+  for(let i=0;i<n;i++) v.setUint8(44+i,128); return URL.createObjectURL(new Blob([b],{type:'audio/wav'})); }
 function audioInit(){
-  if(actx){ if(actx.state==='suspended') actx.resume(); return; }
-  try{
-    actx=new (window.AudioContext||window.webkitAudioContext)();
-    master=actx.createGain(); master.gain.value=.55; master.connect(actx.destination);
-    noiseBuf=actx.createBuffer(1,actx.sampleRate,actx.sampleRate);
-    const d=noiseBuf.getChannelData(0); for(let i=0;i<d.length;i++) d[i]=Math.random()*2-1;
-  }catch(e){ actx=null; }
+  try{ if(navigator.audioSession && navigator.audioSession.type!=='playback') navigator.audioSession.type='playback'; }catch(e){}
+  if(!navigator.audioSession && settings.sound){
+    try{ if(!silentEl){ silentEl=document.createElement('audio'); silentEl.setAttribute('x-webkit-airplay','deny'); silentEl.preload='auto'; silentEl.loop=true; silentEl.src=silentWavURL(); }
+      if(silentEl.paused){ const pr=silentEl.play(); if(pr&&pr.catch) pr.catch(()=>{}); } }catch(e){}
+  }
+  if(!actx){
+    try{
+      actx=new (window.AudioContext||window.webkitAudioContext)();
+      master=actx.createGain(); master.gain.value=.55; master.connect(actx.destination);
+      noiseBuf=actx.createBuffer(1,actx.sampleRate,actx.sampleRate);
+      const d=noiseBuf.getChannelData(0); for(let i=0;i<d.length;i++) d[i]=Math.random()*2-1;
+    }catch(e){ actx=null; return; }
+  }
+  if(actx.state!=='running'){ try{ const pr=actx.resume(); if(pr&&pr.catch) pr.catch(()=>{}); }catch(e){}
+    // a 1-sample buffer played inside the gesture is what actually unlocks older iOS
+    try{ const sb=actx.createBufferSource(); sb.buffer=actx.createBuffer(1,1,22050); sb.connect(actx.destination); sb.start(0); }catch(e){} }
 }
+['touchend','click','keydown'].forEach(ev=>window.addEventListener(ev,audioInit,{capture:true,passive:true}));
+document.addEventListener('visibilitychange',()=>{
+  if(document.hidden){ if(silentEl) silentEl.pause(); if(actx&&actx.state==='running') actx.suspend().catch(()=>{}); }
+});
 function env(g,t,a,peak,dec){ g.gain.setValueAtTime(0.0001,t); g.gain.linearRampToValueAtTime(peak,t+a); g.gain.exponentialRampToValueAtTime(0.0001,t+a+dec); }
 function osc(type,f0,f1,t,a,peak,dec,dest){ const o=actx.createOscillator(),g=actx.createGain(); o.type=type; o.frequency.setValueAtTime(f0,t);
   if(f1) o.frequency.exponentialRampToValueAtTime(f1,t+a+dec); env(g,t,a,peak,dec); o.connect(g); g.connect(dest||master); o.start(t); o.stop(t+a+dec+.05); return o; }
 function noise(t,a,peak,dec,ftype,freq,q){ const s=actx.createBufferSource(); s.buffer=noiseBuf; s.loop=true; const f=actx.createBiquadFilter(); f.type=ftype; f.frequency.value=freq; f.Q.value=q||1;
   const g=actx.createGain(); env(g,t,a,peak,dec); s.connect(f); f.connect(g); g.connect(master); s.start(t, Math.random()*.5); s.stop(t+a+dec+.05); return f; }
 function sfx(n,v=1){
-  if(!actx||!settings.sound) return; const t=actx.currentTime;
+  if(!actx||!settings.sound) return; if(actx.state!=='running'){ try{ actx.resume().catch(()=>{}); }catch(e){} } const t=actx.currentTime;
   switch(n){
     case 'kick': osc('sine',160,42,t,.004,.9*v,.16); noise(t,.002,.35*v,.05,'highpass',1800); break;
     case 'net': noise(t,.03,.5,.45,'bandpass',1100,.6); noise(t,.01,.25,.2,'highpass',3000); break;
