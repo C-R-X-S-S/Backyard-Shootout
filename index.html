@@ -157,6 +157,24 @@ h2{margin:0;font-weight:900;font-style:italic;font-size:clamp(26px,7vw,40px);let
 @keyframes toastIn{0%{opacity:0;transform:scale(.4)}12%{opacity:1;transform:scale(1)}82%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1.1)}}
 @keyframes pop{0%{transform:scale(.3)}100%{transform:scale(1)}}
 @keyframes blink{50%{border-color:rgba(255,210,63,.2)}}
+/* how to play */
+.row2{display:flex;gap:10px}.row2 .btn{flex:1;padding-left:8px;padding-right:8px;font-size:14px;letter-spacing:.03em;white-space:nowrap}
+.screen.help{justify-content:flex-start;gap:12px}
+.help .hd{width:100%;max-width:560px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.help .hd h2{font-size:clamp(24px,6.5vw,36px)}
+.help .hd .btn{width:auto;font-size:14px;padding:9px 16px}
+.hsec{width:100%;max-width:560px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:12px 14px 13px;text-align:left}
+.hsec h3{margin:0 0 6px;font-size:16px;font-weight:900;letter-spacing:.02em;color:var(--yellow);display:flex;align-items:center;gap:8px}
+.hsec h3 .e{font-size:20px}
+.hsec p{margin:6px 0;font-size:14px;line-height:1.4;font-weight:600;opacity:.92}
+.hsec ul{margin:4px 0 2px;padding-left:18px}
+.hsec li{font-size:14px;line-height:1.4;font-weight:600;margin:5px 0;opacity:.92}
+.hsec b{color:#fff;font-weight:900}
+.hsec .tip{margin-top:8px;background:rgba(255,210,31,.14);border-left:3px solid var(--yellow);border-radius:8px;padding:7px 10px;font-size:13px;font-weight:700;line-height:1.35}
+.hsec kbd{display:inline-block;min-width:18px;text-align:center;background:#fff;color:var(--navy);border-radius:5px;padding:0 5px;font:900 12px/18px system-ui;box-shadow:0 2px 0 #b9c4e2}
+.hsec .who{display:grid;grid-template-columns:auto 1fr;gap:6px 10px;align-items:center;margin-top:6px}
+.hsec .who .pf{width:34px;height:34px;border-radius:50%;background:#fff center/cover;border:2px solid #fff}
+.hsec .who div{font-size:13.5px;line-height:1.3;font-weight:600}
 @keyframes floaty{50%{transform:translateY(-6px) rotate(-4deg)}}
 .logo{animation:floaty 3.2s ease-in-out infinite}
 @media (min-height:760px){.card .trait{min-height:28px}}
@@ -196,7 +214,7 @@ h2{margin:0;font-weight:900;font-style:italic;font-size:clamp(26px,7vw,40px);let
     <button class="btn" data-mode="cpu"><span class="ico">🏆</span><span class="txt">Shootout<small>5 kicks each vs the computer</small></span></button>
     <button class="btn alt" data-mode="pnp"><span class="ico">📱</span><span class="txt">Pass &amp; Play<small>2 players, one phone</small></span></button>
     <button class="btn alt" data-mode="target"><span class="ico">🎯</span><span class="txt">Target Challenge<small>10 balls · hit the rings</small></span></button>
-    <button class="btn ghost" id="btnSettings">⚙️ Settings</button>
+    <div class="row2"><button class="btn ghost" id="btnHelp">📖 How to Play</button><button class="btn ghost" id="btnSettings">⚙️ Settings</button></div>
   </div>
   <div style="flex:1 1 0;min-height:10px"></div>
 </div>
@@ -243,6 +261,81 @@ h2{margin:0;font-weight:900;font-style:italic;font-size:clamp(26px,7vw,40px);let
   <div class="seg" id="diffSeg2"><button data-d="0">Easy</button><button data-d="1">Normal</button><button data-d="2">Hard</button></div>
   <div class="toggles" id="setToggles"></div>
   <div class="stack"><button class="btn" id="btnSetDone">Done</button></div>
+</div>
+
+<!-- HOW TO PLAY -->
+<div class="screen solid help hidden" id="scHelp">
+  <div class="hd"><h2>How to Play</h2><button class="btn" id="btnHelpDone">Done</button></div>
+
+  <div class="hsec"><h3><span class="e">⚽</span>Shooting</h3>
+    <p><b>Swipe up from the ball</b> to kick it. Your swipe decides everything:</p>
+    <ul>
+      <li><b>Direction = aim.</b> Swipe toward the spot you want. A longer swipe aims higher, and too high sails over the bar.</li>
+      <li><b>Speed = power.</b> Flick fast for a rocket, slow for a soft shot. It's how fast your finger is moving at the end that counts, not how long the swipe is.</li>
+      <li><b>Curve = bend.</b> Curve your swipe like a banana and the ball bends the same way in the air. Great for going around the keeper (or a dog).</li>
+    </ul>
+    <p>No shot is perfect: the ball lands a little off from where you aimed. A player's <b>Accuracy</b> decides how far off, and hitting it harder makes the miss bigger.</p>
+    <div class="tip">💡 The <b>Aim guide</b> (in Settings) draws where your swipe is heading while your finger is down.</div>
+  </div>
+
+  <div class="hsec"><h3><span class="e">🧤</span>Saving</h3>
+    <ul>
+      <li>When the computer shoots, <b>tap where you want to dive</b>. On a keyboard: <kbd>Q</kbd> <kbd>W</kbd> <kbd>E</kbd> dive high left / middle / right, <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> dive low.</li>
+      <li>The game goes into <b>slow motion</b> during the shot to give you time to react.</li>
+      <li>On <b>Easy</b>, a marker shows where the ball is going.</li>
+      <li><b>Don't dive too early!</b> Move before the kick and the shooter will often see it and put it the other way.</li>
+    </ul>
+  </div>
+
+  <div class="hsec"><h3><span class="e">📊</span>Player Stats</h3>
+    <ul>
+      <li><b>Power</b>: how hard he can shoot.</li>
+      <li><b>Accuracy</b>: how close the ball lands to where you aimed.</li>
+      <li><b>Curve</b>: how much a curved swipe bends the ball.</li>
+      <li><b>Keeping</b>: how far and how fast he dives when he's in goal.</li>
+    </ul>
+    <div class="who" id="helpWho"></div>
+  </div>
+
+  <div class="hsec"><h3><span class="e">🤖</span>The Computer Keeper</h3>
+    <p>The computer keeper reacts after you kick, and only a real touch from his hands or body saves it. A soft shot near him might get caught. Shots can also clip the <b>post</b> or <b>crossbar</b> and go in or bounce out.</p>
+    <ul>
+      <li><b>Easy</b>: slow to react and often guesses wrong.</li>
+      <li><b>Normal</b>: a fair fight.</li>
+      <li><b>Hard</b>: quick, and reads your shot much more often.</li>
+    </ul>
+    <div class="tip">💡 Aim for the <b>corners</b>, hit it hard, and add some curl. Keepers go a little easy on Matix.</div>
+  </div>
+
+  <div class="hsec"><h3><span class="e">🏆</span>Game Modes</h3>
+    <ul>
+      <li><b>Shootout</b>: you vs the computer, 5 kicks each, taking turns shooting and saving. If one side can't catch up, it ends early. Tied after 5? <b>Sudden death</b>: keep going until someone scores and the other misses.</li>
+      <li><b>Pass &amp; Play</b>: two players share one phone and take turns shooting. The third kid is the computer goalkeeper. Pass the phone when it tells you to.</li>
+      <li><b>Target Challenge</b>: 10 balls. Every goal is <b>100</b> points, hitting a glowing ring is <b>+250</b>, and goals in a row add a <b>streak bonus</b>. Your best score is saved.</li>
+    </ul>
+  </div>
+
+  <div class="hsec"><h3><span class="e">🐕</span>Vixen &amp; Izzy</h3>
+    <p>The dogs run all over the yard, and they love the ball.</p>
+    <ul>
+      <li><b>In the way:</b> if a dog is in the ball's path, a low shot hits her: <b>"Vixen blocks!"</b> Chip it over her head or curl it around her.</li>
+      <li><b>Surprise leap:</b> once in a while, a dog sprints out and jumps in front of a shot.</li>
+      <li><b>Too slow?</b> Wait more than about <b>6 seconds</b> to shoot and a dog comes for the ball. Shoot before she gets there! If she wins, she noses it into the net herself: <b>"Izzy scores!"</b></li>
+    </ul>
+    <div class="tip">🐾 A dog block or a dog goal counts as a <b>miss</b> for the shooter.</div>
+  </div>
+
+  <div class="hsec"><h3><span class="e">🔊</span>Buttons &amp; Settings</h3>
+    <ul>
+      <li><b>Speaker</b> (top right in a game): sound on / off.</li>
+      <li><b>❚❚</b> (bottom right): pause, restart or quit. <kbd>Esc</kbd> also pauses on a keyboard.</li>
+      <li><b>Settings</b>: difficulty, sound, vibration and the aim guide.</li>
+      <li><b>✏️</b> next to a player's name: rename him.</li>
+      <li><b>Vibration</b> works on Android. iPhones only give a small tap, and need iOS 18 or newer.</li>
+    </ul>
+  </div>
+
+  <div class="stack" style="margin:4px 0 8px"><button class="btn" id="btnHelpDone2">Got it! ⚽</button></div>
 </div>
 
 <!-- RESULT -->
@@ -1270,8 +1363,8 @@ window.addEventListener('keydown',e=>{
 // =========================================================
 //  UI
 // =========================================================
-const screens=['scTitle','scSelect','scPass','scPause','scSettings','scResult'];
-function showScreen(name){ S.screen=name; const map={title:'scTitle',select:'scSelect',pass:'scPass',settings:'scSettings',result:'scResult'};
+const screens=['scTitle','scSelect','scPass','scPause','scSettings','scResult','scHelp'];
+function showScreen(name){ S.screen=name; const map={title:'scTitle',select:'scSelect',pass:'scPass',settings:'scSettings',result:'scResult',help:'scHelp'};
   screens.forEach(id=>$(id).classList.toggle('hidden',map[name]!==id)); if(name!=='game'&&name!=='pass') $('hud').classList.add('hidden'); }
 function bg(el,p){ el.style.backgroundImage=`url(${FACES[p.id]})`; }
 function banner(a,b){ $('bn1').textContent=a; $('bn2').textContent=b||''; const el=$('banner'); el.classList.remove('show'); void el.offsetWidth; el.classList.add('show'); }
@@ -1407,6 +1500,10 @@ $('btnRestart').onclick=()=>{ sfx('click'); S.paused=false; $('scPause').classLi
 $('btnQuit').onclick=()=>{ sfx('click'); S.paused=false; $('scPause').classList.add('hidden'); goTitle(); };
 $('btnSettings').onclick=()=>{ audioInit(); sfx('click'); buildToggles($('setToggles')); syncSeg(); showScreen('settings'); };
 $('btnSetDone').onclick=()=>{ sfx('click'); goTitle(); };
+$('btnHelp').onclick=()=>{ audioInit(); sfx('click');
+  $('helpWho').innerHTML=PLAYERS.map(p=>`<span class="pf" style="background-image:url(${FACES[p.id]})"></span><div><b>${esc(p.name)} #${p.num}</b> · ${p.trait}</div>`).join('');
+  showScreen('help'); $('scHelp').scrollTop=0; };
+['btnHelpDone','btnHelpDone2'].forEach(id=>$(id).onclick=()=>{ sfx('click'); goTitle(); });
 $('btnStart').onclick=()=>{ audioInit(); sfx('click'); beginFromSelect(); };
 $('btnBack').onclick=()=>{ sfx('click'); goTitle(); };
 $('btnAgain').onclick=()=>{ sfx('click'); startMatch(); };
