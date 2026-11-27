@@ -532,7 +532,7 @@ function makeKeeper(p,isUser){ return {p,isUser,homeX:0,plan:null}; }
 function keeperPose(k,t){
   const h=k.p.height, pl=k.plan;
   if(!pl || t<pl.t0){
-    const ready = S.phase==='aim'||S.phase==='runup'||S.phase==='flight';
+    const ready = S.phase==='aim'||S.phase==='runup'||S.phase==='flight'||S.phase==='dogsteal';
     const sw = ready ? Math.sin(clock*(k.isUser?3:2.3))*(k.isUser?.05:.16) : Math.sin(clock*1.3)*.25;
     const bob = Math.abs(Math.sin(clock*4.6))*.025*h;
     return {x:k.homeX+sw, y:.5*h-(ready?.04*h:0)-bob, a:0, arms:ready?.3:.15, dive:0, crouch:ready?.5:.1, fall:0};
@@ -581,6 +581,11 @@ function stepBall(h){
   if(S.dogBlocker && !b.passedDog && pz<DOG_Z && b.z>=DOG_Z){ b.passedDog=true; const d=S.dogBlocker;
     b.vz=-Math.abs(b.vz)*.28; b.vx=b.vx*.2+rand(-2,2); b.vy=Math.abs(b.vy)*.25+rand(2.5,4.5); b.ax=0;
     d.bark=1.4; sfx('save'); setTimeout(()=>sfx('bark'),80); buzz(25); resolve('dogblock'); return; }
+  // a roaming dog in the way
+  if(!S.outcome && b.vz>0){ const dd=dogHitsBall(b); if(dd){ b.passedDog=true; S.dogBlocker=dd;
+    b.vz=-Math.abs(b.vz)*.25; b.vx=b.vx*.2+(b.x>=dd.x?1:-1)*rand(1,2.5); b.vy=Math.abs(b.vy)*.25+rand(1.5,3.5); b.ax=0;
+    dd.bark=1.4; dd.state='sit'; dd.t=rand(1.8,2.8); dd.wp=[]; dd.guard=false; dd.speedNow=0;
+    sfx('save'); setTimeout(()=>sfx('bark'),80); buzz(25); resolve('dogblock'); return; } }
   // keeper
   if(keeper && !b.passedK && pz<KEEPER_Z && b.z>=KEEPER_Z){ b.passedK=true;
     const pose=keeperPose(keeper,S.simT), sg=keeperSegs(keeper,pose);
@@ -713,7 +718,7 @@ function cpuKeeperReact(shooterP){
   else { const side=Math.random()<.5?-1:1; tx=side*rand(.7,1.7); ty=rand(.15,1.5); }
   planDive(k,tx,ty,react,.62-.2*K+[.14,0,-.04][d]);
 }
-function afterKick(){ setPhase('flight'); S.simT=0; sfx('kick'); buzz(15); maybeDogBlock();
+function afterKick(){ abortSteal(); setPhase('flight'); S.simT=0; sfx('kick'); buzz(15); maybeDogBlock();
   const p=proj(cam,ball.x,0,ball.z); for(let i=0;i<10;i++) parts.push({x:p.x+rand(-8,8),y:p.y,vx:rand(-90,90),vy:rand(-260,-80),life:.6,max:.6,col:Math.random()<.5?'#5d8f2c':'#8fbf4a',size:rand(2,4),g:900}); }
 
 // ---------- CPU shot ----------
@@ -740,7 +745,7 @@ function userDive(sx,sy){
 }
 
 // ---------- outcome ----------
-const MSG={dogblock:'BLOCKED!',goal:'GOAL!',postin:'POST & IN!',barin:'OFF THE BAR & IN!',save:'SAVED!',post:'OFF THE POST!',bar:'CROSSBAR!',wide:'WIDE!',over:'OVER!',short:'SAVED!'};
+const MSG={dogscore:'DOG GOAL!',dogblock:'BLOCKED!',goal:'GOAL!',postin:'POST & IN!',barin:'OFF THE BAR & IN!',save:'SAVED!',post:'OFF THE POST!',bar:'CROSSBAR!',wide:'WIDE!',over:'OVER!',short:'SAVED!'};
 function resolve(type){
   if(S.outcome) return;
   const scored = type==='goal'||type==='postin'||type==='barin';
@@ -764,6 +769,7 @@ function resolve(type){
     const p=S.res.A.length+S.res.B.length; if(Math.max(S.res.A.length,S.res.B.length)>5) sub=sub||'SUDDEN DEATH';
   }
 if(type==='dogblock' && S.dogBlocker){ title=`${S.dogBlocker.name} blocks!`; sub='🐾 Good dog!'; good=true; }
+  if(type==='dogscore' && S.dogScorer){ title=`${S.dogScorer.name} scores!`; sub='🐾 Too slow! Kick lost'; good=true; shake=.2; }
   toast(title,sub,good);
   if(scored){ shake=.35; dogZoomies(); setTimeout(()=>sfx('bark'),250); }
   if(good){ setTimeout(()=>sfx('cheer'),scored?80:0); confetti(scored?90:50); buzz([30,40,30]); } else setTimeout(()=>sfx('groan'),150);
@@ -791,6 +797,8 @@ function frame(now){
   const sdt=dt*S.ts;
   switch(S.phase){
     case 'banner': if(S.phaseT>1.15) setPhase(shooter?'runup':'aim'); break;
+    case 'aim': if(!swipe && !S.stealDog && S.phaseT>STALL_T && keeper && !keeper.isUser) startSteal(); updateSteal(dt); break;
+    case 'dogsteal': S.simT+=dt; updateSteal(dt); break;
     case 'runup': {
       S.simT+=sdt;
       if(S.simT>=0 && !shooter.kicked){ S.simT=0; cpuShoot(); }
@@ -808,7 +816,7 @@ function frame(now){
     q.vy+=(q.g||0)*dt; q.vx*=q.drag?1-q.drag*dt:1; q.x+=q.vx*dt; q.y+=q.vy*dt; if(q.vr) q.rot+=q.vr*dt; }
   for(let i=trail.length-1;i>=0;i--) if(now-trail[i].t>260) trail.splice(i,1);
   netHits=netHits.filter(n=>clock-n.t<1.6);
-  shake=Math.max(0,shake-dt); updateDogs(dt*S.ts);
+  shake=Math.max(0,shake-dt); updateDogs(dt*S.ts); rollIn(dt);
   render();
 }
 
@@ -996,66 +1004,134 @@ function drawShooter(g){
 let titleKeeper=null;
 
 // ---------- dogs (Vixen & Izzy) ----------
-// They roam the yard: walk, trot, sniff, sit, and chase each other. Occasionally one intercepts a shot.
-const inLane=(x,z)=>z<12.7 && Math.abs(x)<2.3;          // in front of / inside the goal: keep out while roaming
-function randWp(){
-  for(let i=0;i<40;i++){ const z=rand(9.2,15.5), x=rand(-4.3,4.3);
-    if(inLane(x,z)) continue;
-    if(Math.abs(x)>.15*(z+4.6)+.5 && Math.random()<.8) continue;   // mostly stay on-screen on phones
+// They roam the whole yard (in front of the goal too): walk, trot, sniff, sit, chase each other, and sometimes
+// park in the shooting lane as an obstacle. A dog in the ball's path blocks it. If the shooter stalls, one steals the ball
+// and noses it into the goal.
+const inGoal=(x,z)=>Math.abs(x)<HW+.25 && z>GOAL_Z-.15 && z<GOAL_Z+1.45;   // the goal frame + net: walk round it
+const STEAL_STATES={steal:1,push:1};
+function randWp(front){
+  for(let i=0;i<40;i++){ const z=front||Math.random()<.32?rand(2.6,9.4):rand(9.4,15.5), x=rand(-4.3,4.3);
+    if(inGoal(x,z)) continue;
+    if(Math.abs(x)>.15*(z+4.6)+.5 && Math.random()<.85) continue;   // mostly stay on-screen on phones
     return {x,z}; }
   return {x:rand(-3,3),z:14.5};
 }
 function routeTo(d,b){
   const a={x:d.x,z:d.z}, wp=[];
-  if(inLane(a.x,a.z)){ a.x=(Math.sign(a.x)||1)*2.6; wp.push({x:a.x,z:a.z}); }
-  let cross=false; for(let i=1;i<12;i++){ const u=i/12; if(inLane(lerp(a.x,b.x,u),lerp(a.z,b.z,u))) cross=true; }
-  if(cross) wp.push({x:a.x,z:13.1},{x:b.x,z:13.1});   // go round behind the goal
+  let cross=false; for(let i=1;i<14;i++){ const u=i/14; if(inGoal(lerp(a.x,b.x,u),lerp(a.z,b.z,u))) cross=true; }
+  if(cross){ const sx=(Math.sign(a.x+b.x)||1)*(HW+.7); wp.push({x:sx,z:a.z},{x:sx,z:b.z}); }   // go round the goal
   wp.push(b); d.wp=wp;
 }
 function dogAction(d){
   const o=DOGS.find(q=>q!==d), r=Math.random(); d.target=null;
-  if(r<.40){ d.state='walk'; d.speed=rand(.8,1.4); routeTo(d,randWp()); }
-  else if(r<.56){ d.state='trot'; d.speed=rand(2.6,3.6); routeTo(d,randWp()); }
-  else if(r<.71){ d.state='sniff'; d.t=rand(1.5,3.2); }
-  else if(r<.84){ d.state='sit'; d.t=rand(2.5,5); }
-  else if(!o.plan && o.state!=='chase' && o.state!=='flee'){
+  if(r<.16){ d.state='walk'; d.speed=rand(1,1.6); d.guard=true; routeTo(d,{x:rand(-1.3,1.3),z:rand(4,8.8)}); }   // park in the shooting lane
+  else if(r<.48){ d.state='walk'; d.speed=rand(.8,1.4); routeTo(d,randWp()); }
+  else if(r<.62){ d.state='trot'; d.speed=rand(2.6,3.6); routeTo(d,randWp()); }
+  else if(r<.74){ d.state='sniff'; d.t=rand(1.5,3.2); }
+  else if(r<.86){ d.state='sit'; d.t=rand(2.5,5); }
+  else if(!o.plan && o.state!=='chase' && o.state!=='flee' && !STEAL_STATES[o.state]){
     d.state='chase'; d.speed=4.6; d.t=rand(2.2,3.6); d.target=o; d.bark=.5;
     o.state='flee'; o.speed=4.3; routeTo(o,randWp()); o.wp.push(randWp()); }
   else { d.state='sit'; d.t=rand(2,4); }
 }
-function dogZoomies(){ DOGS.forEach(d=>{ if(d.plan) return; d.state='flee'; d.speed=5.2; routeTo(d,randWp()); d.wp.push(randWp()); d.bark=1; }); }
-const DOG_MOVING={walk:1,trot:1,flee:1,chase:1};
+function dogZoomies(){ DOGS.forEach(d=>{ if(d.plan||STEAL_STATES[d.state]) return; d.state='flee'; d.speed=5.2; routeTo(d,randWp()); d.wp.push(randWp()); d.bark=1; }); }
+const DOG_MOVING={walk:1,trot:1,flee:1,chase:1,steal:1,push:1};
 function updateDogs(dt){
   DOGS.forEach(d=>{
     d.bark=Math.max(0,d.bark-dt*2); if(d.plan){ d.gait+=dt*20; return; }
+    if(STEAL_STATES[d.state]) return;   // driven by updateSteal
     if(!DOG_MOVING[d.state]){ d.t-=dt; d.speedNow=0; if(d.t<=0) dogAction(d); return; }
     let tg;
     if(d.state==='chase'){
       d.t-=dt; const o=d.target;
-      if(d.t<=0 || o.plan || !DOG_MOVING[o.state]){ d.state='sniff'; d.t=rand(1,2); if(o.state==='flee'&&!o.plan){ o.state='sit'; o.t=rand(1.5,3); o.wp=[]; } return; }
-      tg={x:o.x-(o.dir||1)*.55,z:o.z}; if(inLane(tg.x,tg.z)) tg.x=(Math.sign(tg.x)||1)*2.6;
+      if(d.t<=0 || o.plan || !DOG_MOVING[o.state] || STEAL_STATES[o.state]){ d.state='sniff'; d.t=rand(1,2); if(o.state==='flee'&&!o.plan){ o.state='sit'; o.t=rand(1.5,3); o.wp=[]; } return; }
+      tg={x:o.x-(o.dir||1)*.55,z:o.z}; if(inGoal(tg.x,tg.z)) tg.x=(Math.sign(tg.x)||1)*(HW+.7);
     } else tg=d.wp[0];
     if(!tg){ d.state=Math.random()<.55?'sniff':'sit'; d.t=rand(1.5,4); return; }
     const dx=tg.x-d.x, dz=tg.z-d.z, dist=Math.hypot(dx,dz), step=d.speed*dt;
     if(d.state!=='chase' && dist<=step){ d.x=tg.x; d.z=tg.z; d.wp.shift();
-      if(!d.wp.length){ d.state=Math.random()<.55?'sniff':'sit'; d.t=rand(1.5,4); } return; }
+      if(!d.wp.length){ if(d.guard){ d.guard=false; d.state='sit'; d.t=rand(3.5,6.5); } else { d.state=Math.random()<.55?'sniff':'sit'; d.t=rand(1.5,4); } } return; }
     if(d.state==='chase' && dist<.35){ d.speedNow=0; return; }
     d.x+=dx/dist*step; d.z+=dz/dist*step; if(Math.abs(dx)>.02) d.dir=Math.sign(dx);
     d.speedNow=d.speed; d.gait+=dt*(4+d.speed*3.4);
   });
 }
 function resetDogs(){
-  DOGS.forEach(d=>{ if(d.plan){ d.x=d.plan.x; d.z=d.plan.z; d.plan=null; d.state='trot'; d.speed=3; routeTo(d,randWp()); } });
-  S.dogBlocker=null;
+  DOGS.forEach(d=>{ if(d.plan){ d.x=d.plan.x; d.z=d.plan.z; d.plan=null; d.state='trot'; d.speed=3; routeTo(d,randWp()); }
+    else if(STEAL_STATES[d.state]){ d.state='sniff'; d.t=rand(1,2); }
+    if(d.z<2.4 && !d.plan){ d.state='trot'; d.speed=3.2; routeTo(d,randWp()); } });   // never start a kick with a dog on the ball
+  S.dogBlocker=null; S.stealDog=null; S.dogScorer=null; S.steal=null;
 }
-DOGS.forEach((d,i)=>{ Object.assign(d,{x:d.hx,z:d.hz,state:'sit',t:rand(1,3)+i*1.5,dir:d.hx<0?1:-1,wp:[],gait:0,speedNow:0,target:null}); });
+
+// ---- a dog standing in the ball's path blocks it ----
+function dogBody(d){ const s=d.size;
+  if(d.state==='sit') return {cx:d.x+.03*s, hx:.21*s, hz:.17*s, ht:.72*s};
+  return {cx:d.x+(d.dir||1)*.08*s, hx:.38*s, hz:.13*s, ht:.62*s}; }
+function dogHitsBall(b){
+  for(const d of DOGS){ if(d.plan || STEAL_STATES[d.state] || d===S.dogBlocker) continue;
+    if(d.z<1.6 || d.z>GOAL_Z-.12) continue;
+    const q=dogBody(d);
+    if(Math.abs(b.x-q.cx)<q.hx+BALL_R && Math.abs(b.z-d.z)<q.hz+BALL_R && b.y-BALL_R<q.ht) return d; }
+  return null;
+}
+
+// ---- stall too long and a dog takes the ball ----
+const STALL_T=6;
+function startSteal(){
+  const free=DOGS.filter(d=>!d.plan); if(!free.length) return;
+  const d=free.sort((a,b)=>Math.hypot(a.x-ball.x,a.z-ball.z)-Math.hypot(b.x-ball.x,b.z-ball.z))[0];
+  const dir=Math.random()<.5?-1:1, push=pushSpot(d,dir);
+  d.state='steal'; d.speed=5.2; d.bark=1.2; d.guard=false; d.target=null; d.stealDir=dir; d.wp=[];
+  if(d.z>push.z+.25){ const side={x:ball.x-dir*1.05,z:.45}; routeTo(d,side); d.wp.push(push); } else d.wp=[push];
+  S.stealDog=d; sfx('bark'); buzz(15);
+  showHint(`<b>Hurry!</b> ${d.name} wants the ball! 🐾`);
+}
+function pushSpot(d,dir){ return {x:ball.x-dir*.45*d.size, z:ball.z-.12}; }
+// after the dog scores, the ball trickles on into the net
+function rollIn(dt){ const st=S.steal, b=ball; if(!st||!st.roll||!b) return;
+  st.spd=Math.max(0,st.spd-.9*dt); if(!st.spd) return;
+  b.x+=st.ux*st.spd*dt; b.z+=st.uz*st.spd*dt; b.rx+=st.spd*dt/BALL_R;
+  const back=GOAL_Z+netDepth(BALL_R)-BALL_R; b.x=clamp(b.x,-HW+BALL_R,HW-BALL_R);
+  if(b.z>back){ b.z=back; netHits.push({x:b.x,y:BALL_R,t:clock,a:.25}); st.spd=0; } }
+function abortSteal(){ const d=S.stealDog; if(d && d.state==='steal'){ d.state='sniff'; d.t=rand(1,2); d.wp=[]; S.stealDog=null; } }
+function moveDogTo(d,tg,speed,dt){ const dx=tg.x-d.x, dz=tg.z-d.z, dist=Math.hypot(dx,dz), step=speed*dt;
+  if(dist<=step){ d.x=tg.x; d.z=tg.z; } else { d.x+=dx/dist*step; d.z+=dz/dist*step; }
+  if(Math.abs(dx)>.02 && d.state!=='push') d.dir=Math.sign(dx);
+  d.speedNow=dist>.01?speed:0; d.gait+=dt*(4+speed*3.4); return dist<=step; }
+function updateSteal(dt){
+  const d=S.stealDog; if(!d) return;
+  if(d.state==='steal'){
+    if(d.wp.length>1){ if(moveDogTo(d,d.wp[0],d.speed,dt)) d.wp.shift(); return; }
+    d.wp[0]=pushSpot(d,d.stealDir);
+    if(moveDogTo(d,d.wp[0],d.speed,dt)){   // got there before the kick: it's the dog's ball now
+      d.state='push'; d.dir=d.stealDir; d.wp=[]; swipe=null; trail.length=0; hideHint();
+      const tx=d.stealDir*rand(.75,1.3); S.steal={tx,tz:GOAL_Z+.8,spd:0};
+      setPhase('dogsteal'); S.simT=0; d.bark=1; sfx('bark'); }
+    return; }
+  if(d.state!=='push' || S.phase!=='dogsteal') return;
+  // nose-nudges: the dog catches up to the ball, bumps it, it rolls a little, repeat
+  const st=S.steal, b=ball;
+  const ux0=st.tx-b.x, uz0=st.tz-b.z, ul=Math.hypot(ux0,uz0)||1, ux=ux0/ul, uz=uz0/ul;
+  st.spd=Math.max(0,st.spd-1.7*dt);
+  b.x+=ux*st.spd*dt; b.z+=uz*st.spd*dt; b.rx+=st.spd*dt/BALL_R; b.ry+=ux*st.spd*dt/BALL_R*.5;
+  const ps=pushSpot(d,d.stealDir); moveDogTo(d,ps,3,dt); d.dir=d.stealDir;
+  if(Math.hypot(ps.x-d.x,ps.z-d.z)<.1 && st.spd<1){ st.spd=rand(2.9,3.5); sfx('bounce',.25); }
+  // keeper, flat-footed, dives the wrong way
+  if(keeper && !keeper.plan && b.z>6.8) planDive(keeper,-d.stealDir*rand(1,1.5),rand(.3,.8),S.simT,.5);
+  if(b.z>=GOAL_Z-.02){
+    st.roll=true; st.ux=ux; st.uz=uz; st.spd=Math.max(st.spd,1.5); b.crossed=true; b.inNet=true;
+    S.dogScorer=d; d.state='sit'; d.t=3.2; d.speedNow=0; d.bark=1.6; S.stealDog=null;
+    resolve('dogscore'); setTimeout(()=>sfx('bark'),120);
+  }
+}
+DOGS.forEach((d,i)=>{ Object.assign(d,{x:d.hx,z:d.hz,state:'sit',t:rand(1,3)+i*1.5,dir:d.hx<0?1:-1,wp:[],gait:0,speedNow:0,target:null,guard:false}); });
 
 function maybeDogBlock(){
   shotsSinceDog++;
   const total=S.res.A.length+S.res.B.length;
   if(total<2 || shotsSinceDog<4 || Math.random()>.1) return;
   const c=predictCross(ball,DOG_Z); if(!c.ok || Math.abs(c.x)>2.3 || c.y>1.9 || c.t<.25) return;
-  const order=DOGS.slice().sort((a,b)=>Math.hypot(a.x-c.x,a.z-DOG_Z)-Math.hypot(b.x-c.x,b.z-DOG_Z)), d=order[Math.random()<.75?0:1];
+  const order=DOGS.filter(q=>!STEAL_STATES[q.state]).sort((a,b)=>Math.hypot(a.x-c.x,a.z-DOG_Z)-Math.hypot(b.x-c.x,b.z-DOG_Z)), d=order[Math.random()<.75?0:1];
   d.plan={sx:d.x, sz:d.z, x:c.x, z:DOG_Z, T:c.t, jh:clamp(c.y-.38*d.size,0,1.5)};
   shotsSinceDog=0; S.dogBlocker=d;
 }
@@ -1079,7 +1155,7 @@ function drawDog(g,d){
   g.lineCap='round';
   if(!sitting){
     // side view: walk / trot / sprint / leap / sniff
-    const f=pos.dir||1, leap=pos.y>.02, sp=pos.speed||0, moving=pos.run, sniff=!d.plan&&d.state==='sniff';
+    const f=pos.dir||1, leap=pos.y>.02, sp=pos.speed||0, moving=pos.run, sniff=!d.plan&&(d.state==='sniff'||d.state==='push');
     const ph=d.gait, amp=moving?clamp(.06+sp*.025,.06,.18):0, bob=moving?Math.abs(Math.sin(ph))*M(.012+sp*.004):0;
     const by=y-M(.32)-bob;
     g.save(); g.translate(x,by); g.scale(f,1); g.translate(-x,-by);
