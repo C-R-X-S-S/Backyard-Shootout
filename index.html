@@ -63,8 +63,8 @@ h2{margin:0;font-weight:900;font-style:italic;font-size:clamp(26px,7vw,40px);let
 .card .nm{font-weight:900;font-size:16px;line-height:1.1;display:flex;align-items:center;justify-content:center;gap:4px;min-height:20px}
 .card .edit{border:0;background:none;padding:2px 4px;font-size:13px;cursor:pointer;opacity:.6}
 .card .trait{font-size:10.5px;font-weight:700;opacity:.65;min-height:26px;margin:3px 0 6px;line-height:1.2}
-.stat{display:flex;align-items:center;gap:5px;font-size:9.5px;font-weight:900;letter-spacing:.04em;margin-top:3px}
-.stat b{width:24px;text-align:left;opacity:.7}
+.stat{display:block;font-size:10px;font-weight:900;letter-spacing:.02em;margin-top:4px;text-align:left}
+.stat b{display:block;opacity:.7;line-height:1.1;margin-bottom:2px}
 .stat i{flex:1;height:6px;border-radius:4px;background:#e3e7f2;overflow:hidden;display:block}
 .stat i u{display:block;height:100%;background:linear-gradient(90deg,#2f7bf5,#36c4ff);border-radius:4px}
 .badge{position:absolute;top:-9px;left:50%;transform:translateX(-50%);background:var(--navy);color:var(--yellow);font-size:11px;font-weight:900;
@@ -1279,7 +1279,7 @@ function toast(a,b,good){ $('ts1').textContent=a; $('ts2').textContent=b||''; $(
 function showHint(h){ const el=$('hint'); el.innerHTML=h; el.classList.remove('hidden'); el.style.opacity=1; }
 function hideHint(){ const el=$('hint'); el.style.opacity=0; setTimeout(()=>{ if(el.style.opacity==='0') el.classList.add('hidden'); },300); }
 function kickInfo(sh){ const el=$('kickInfo'); const pw=Math.round(sh.power*100); const bars='▮'.repeat(Math.round(sh.power*5)).padEnd(5,'▯');
-  el.textContent=`⚡ ${bars} ${pw}%` + (sh.curlN? `  ·  ${sh.curlN>0?'↷':'↶'} CURL ${Math.round(Math.abs(sh.curlN)*100)}%`:''); el.classList.add('show'); clearTimeout(el._t); el._t=setTimeout(()=>el.classList.remove('show'),1600); }
+  el.textContent=`⚡ Power ${bars} ${pw}%` + (sh.curlN? `  ·  ${sh.curlN>0?'↷':'↶'} Curl ${Math.round(Math.abs(sh.curlN)*100)}%`:''); el.classList.add('show'); clearTimeout(el._t); el._t=setTimeout(()=>el.classList.remove('show'),1600); }
 
 function updateHUD(){
   const tA=$('tA'), tB=$('tB');
@@ -1319,12 +1319,12 @@ function renderCards(){
   PLAYERS.forEach(p=>{
     const d=document.createElement('div'); d.className='card';
     let badge='';
-    if(S.mode==='pnp'){ if(sel.p1===p.id) {d.classList.add('sel'); badge='<div class="badge">P1</div>';} else if(sel.p2===p.id){ d.classList.add('sel'); badge='<div class="badge">P2</div>'; }
+    if(S.mode==='pnp'){ if(sel.p1===p.id) {d.classList.add('sel'); badge='<div class="badge">PLAYER 1</div>';} else if(sel.p2===p.id){ d.classList.add('sel'); badge='<div class="badge">PLAYER 2</div>'; }
       else if(sel.p1&&sel.p2) badge='<div class="badge k">🧤 KEEPER</div>'; }
     else if(sel.me===p.id){ d.classList.add('sel'); badge='<div class="badge">YOU</div>'; }
     const st=(l,v)=>`<div class="stat"><b>${l}</b><i><u style="width:${v}%"></u></i></div>`;
     d.innerHTML=`${badge}<div class="face" style="background-image:url(${FACES[p.id]})"></div><div class="nm"><span>${esc(p.name)} <small style="opacity:.55">#${p.num}</small></span><button class="edit" aria-label="Rename">✏️</button></div>
-      <div class="trait">${p.trait}</div>${st('PWR',p.power)}${st('ACC',p.accuracy)}${st('CRV',p.curve)}${st('GK',p.keeping)}`;
+      <div class="trait">${p.trait}</div>${st('Power',p.power)}${st('Accuracy',p.accuracy)}${st('Curve',p.curve)}${st('Keeping',p.keeping)}`;
     d.onclick=e=>{ sfx('click');
       if(e.target.closest('.edit')){ openName(p); return; }
       if(S.mode==='pnp'){ if(sel.p1===p.id) sel.p1=null; else if(sel.p2===p.id) sel.p2=null; else if(!sel.p1) sel.p1=p.id; else if(!sel.p2) sel.p2=p.id; else sel.p2=p.id; }
