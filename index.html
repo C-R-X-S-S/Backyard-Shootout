@@ -304,7 +304,14 @@ const settings = Object.assign({diff:1, sound:true, haptics:true, aim:true}, sto
 const saveSettings=()=>store.set('settings',settings);
 const savedNames = store.get('names',{}); PLAYERS.forEach(p=>{ if(savedNames[p.id]) p.name=savedNames[p.id]; });
 const faceImg = {}; PLAYERS.forEach(p=>{ const i=new Image(); i.src=FACES[p.id]; faceImg[p.id]=i; });
-const buzz = pat => { if(settings.haptics && navigator.vibrate && (!navigator.userActivation || navigator.userActivation.hasBeenActive)) try{navigator.vibrate(pat);}catch(e){} };
+// Android etc: navigator.vibrate. iPhone (Safari, Brave, every iOS browser) has no vibrate API; on iOS 18+ toggling a
+// hidden <input type=checkbox switch> via its label plays the system haptic tick, so a pattern becomes one tick per pulse.
+function iosTick(){ try{ const l=document.createElement('label'); l.ariaHidden='true'; l.style.display='none';
+  const i=document.createElement('input'); i.type='checkbox'; i.setAttribute('switch',''); l.appendChild(i);
+  document.head.appendChild(l); l.click(); document.head.removeChild(l); }catch(e){} }
+const buzz = pat => { if(!settings.haptics) return;
+  if(navigator.vibrate){ if(!navigator.userActivation || navigator.userActivation.hasBeenActive) try{navigator.vibrate(pat);}catch(e){} return; }
+  const arr=Array.isArray(pat)?pat:[pat]; let t=0; arr.forEach((v,k)=>{ if(k%2===0) (t?setTimeout(iosTick,t):iosTick()); t+=v+(k%2===0?40:0); }); };
 
 // =========================================================
 //  AUDIO (synthesised, no files)
@@ -1381,7 +1388,7 @@ function showResult(w){
 function buildToggles(el){
   const defs=[['sound','🔊 Sound'],['haptics','📳 Vibration'],['aim','🎯 Aim guide (shows where it\'ll go)']];
   el.innerHTML=''; defs.forEach(([k,l])=>{ const d=document.createElement('div'); d.className='tog'+(settings[k]?' on':''); d.innerHTML=`<span>${l}</span><span class="sw"></span>`;
-    d.onclick=()=>{ settings[k]=!settings[k]; saveSettings(); d.classList.toggle('on',settings[k]); audioInit(); syncSnd(); sfx('click'); }; el.appendChild(d); });
+    d.onclick=()=>{ settings[k]=!settings[k]; saveSettings(); d.classList.toggle('on',settings[k]); audioInit(); syncSnd(); sfx('click'); if(k==='haptics'&&settings[k]) buzz([30,60,30]); }; el.appendChild(d); });
 }
 function togglePause(){
   if(S.screen!=='game') return; S.paused=!S.paused; $('scPause').classList.toggle('hidden',!S.paused);
