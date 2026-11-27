@@ -52,8 +52,9 @@ h2{margin:0;font-weight:900;font-style:italic;font-size:clamp(26px,7vw,40px);let
 .sub{font-weight:800;font-size:13px;letter-spacing:.14em;text-transform:uppercase;opacity:.8}
 
 /* player cards */
-.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%;max-width:560px}
-.card{position:relative;background:#fff;color:var(--navy);border-radius:18px;padding:12px 8px 10px;text-align:center;cursor:pointer;
+.cards{display:flex;gap:10px;width:100%;max-width:560px;overflow-x:auto;scroll-snap-type:x proximity;padding:12px 3px 12px;margin:-12px 0 -12px;
+  touch-action:pan-x pan-y;scrollbar-width:thin;-webkit-overflow-scrolling:touch}
+.card{position:relative;flex:0 0 calc((100% - 20px)/3);scroll-snap-align:start;background:#fff;color:var(--navy);border-radius:18px;padding:12px 8px 10px;text-align:center;cursor:pointer;
   box-shadow:0 5px 0 #b9c4e2,0 10px 20px rgba(0,0,0,.25);border:3px solid transparent;transition:transform .12s}
 .card:active{transform:scale(.97)}
 .card.sel{border-color:var(--yellow);background:#fffbe8;box-shadow:0 5px 0 var(--yellow2),0 0 0 4px rgba(255,210,63,.35),0 10px 20px rgba(0,0,0,.25)}
@@ -76,7 +77,7 @@ h2{margin:0;font-weight:900;font-style:italic;font-size:clamp(26px,7vw,40px);let
 .seg button.on{background:#fff;color:var(--navy)}
 .lbl{font-size:12px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;opacity:.75;width:100%;max-width:360px;margin-bottom:-6px}
 
-.opps{display:flex;gap:12px;justify-content:center}
+.opps{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;max-width:560px}
 .opp{background-color:#fff;width:58px;height:58px;border-radius:50%;background-size:cover;border:4px solid rgba(255,255,255,.35);cursor:pointer;position:relative}
 .opp.sel{border-color:#e84a5f;box-shadow:0 0 0 4px rgba(232,74,95,.35)}
 .opp.dis{opacity:.25;pointer-events:none}
@@ -157,6 +158,36 @@ h2{margin:0;font-weight:900;font-style:italic;font-size:clamp(26px,7vw,40px);let
 @keyframes toastIn{0%{opacity:0;transform:scale(.4)}12%{opacity:1;transform:scale(1)}82%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1.1)}}
 @keyframes pop{0%{transform:scale(.3)}100%{transform:scale(1)}}
 @keyframes blink{50%{border-color:rgba(255,210,63,.2)}}
+/* add-player card + editor */
+.card.add{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;background:rgba(255,255,255,.08);color:#fff;
+  border:3px dashed rgba(255,255,255,.4);box-shadow:none;min-height:180px}
+.card.add .plus{width:min(70px,19vw);height:min(70px,19vw);border-radius:50%;background:var(--yellow);color:var(--navy);display:flex;align-items:center;justify-content:center;font-size:40px;font-weight:900;box-shadow:0 4px 0 var(--yellow2)}
+.card.add .nm{color:#fff;font-size:14px}
+.card.add small{font-size:10.5px;font-weight:700;opacity:.7;line-height:1.2}
+.ed .edphoto{position:relative;width:min(240px,66vw);aspect-ratio:1;margin:4px auto 10px;border-radius:20px;overflow:hidden;background:#fff}
+.ed .edphoto canvas{position:static;inset:auto;width:100%;height:100%;display:block;touch-action:none;cursor:grab}
+.ed .edhint{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:30px;color:var(--navy);font-weight:900;font-size:15px;pointer-events:none}
+.ed .edzoom{display:flex;align-items:center;gap:10px;margin:0 auto 8px;max-width:280px;font-weight:900}
+.ed input[type=range]{flex:1;accent-color:var(--yellow);height:30px;touch-action:none}
+.ed .row2 .btn{font-size:14px;cursor:pointer;text-align:center;justify-content:center}
+.ed .edsmall{font-size:12.5px;opacity:.75;margin:4px 0 8px;text-align:center}
+.ed .edrow{display:flex;gap:8px}
+.ed .edrow input{font:inherit;font-weight:900;font-size:18px;padding:10px 12px;border-radius:12px;border:2px solid rgba(255,255,255,.3);background:rgba(255,255,255,.1);color:#fff;
+  -webkit-user-select:text;user-select:text;min-width:0;flex:1}
+.ed .edrow input#edNum{flex:0 0 74px;text-align:center}
+.ed .edrow input::placeholder{color:rgba(255,255,255,.45)}
+.ed .swatches{display:flex;flex-wrap:wrap;gap:9px;justify-content:center;margin:4px 0 12px}
+.ed .sw{width:38px;height:38px;border-radius:50%;border:3px solid rgba(255,255,255,.35);cursor:pointer;box-shadow:0 3px 0 rgba(0,0,0,.25)}
+.ed .sw.on{border-color:#fff;transform:scale(1.12);box-shadow:0 0 0 3px var(--yellow)}
+.ed .seg{margin:0 auto}
+.ed h3 .pts{margin-left:auto;font-size:12px;color:#fff;opacity:.75;letter-spacing:.04em}
+.ed .srow{display:grid;grid-template-columns:76px 34px 1fr 34px 30px;align-items:center;gap:6px;margin:6px 0}
+.ed .srow b{font-size:13.5px}
+.ed .srow .pm{width:34px;height:34px;border-radius:50%;border:0;background:rgba(255,255,255,.16);color:#fff;font-weight:900;font-size:20px;line-height:1;cursor:pointer;padding:0}
+.ed .srow .pm:active{background:rgba(255,255,255,.3)}
+.ed .srow .v{font-weight:900;font-size:16px;text-align:right;color:var(--yellow)}
+.ed .btn.small{font-size:14px;padding:9px 14px;width:auto;margin:6px auto 0;display:block}
+.ederr{color:#ff9aa5;font-weight:900;font-size:14px;text-align:center;min-height:18px}
 /* how to play */
 .row2{display:flex;gap:10px}.row2 .btn{flex:1;padding-left:8px;padding-right:8px;font-size:14px;letter-spacing:.03em;white-space:nowrap}
 .screen.help{justify-content:flex-start;gap:12px}
@@ -263,6 +294,32 @@ h2{margin:0;font-weight:900;font-style:italic;font-size:clamp(26px,7vw,40px);let
   <div class="stack"><button class="btn" id="btnSetDone">Done</button></div>
 </div>
 
+<!-- NEW / EDIT PLAYER -->
+<div class="screen solid help hidden" id="scEdit">
+  <div class="hd"><h2 id="edTitle">New Player</h2><button class="btn ghost" id="edCancel" style="width:auto;font-size:14px;padding:9px 14px">Cancel</button></div>
+  <div class="hsec ed"><h3><span class="e">📸</span>Photo</h3>
+    <div class="edphoto"><canvas id="edCrop" width="480" height="480"></canvas><div class="edhint" id="edHint">Take a selfie or pick a photo 👇</div></div>
+    <div class="edzoom hidden" id="edZoomRow"><span>➖</span><input type="range" id="edZoom" min="1" max="4" step="0.01" value="1"><span>➕</span></div>
+    <p class="edsmall hidden" id="edDragHint">Drag (and pinch or slide to zoom) to fit your face in the oval.</p>
+    <div class="row2"><label class="btn alt" for="edCam">📸 Take selfie</label><label class="btn alt" for="edFile">🖼️ Choose photo</label></div>
+    <input type="file" id="edCam" accept="image/*" capture="user" hidden><input type="file" id="edFile" accept="image/*" hidden>
+  </div>
+  <div class="hsec ed"><h3><span class="e">🏷️</span>Name &amp; number</h3>
+    <div class="edrow"><input id="edName" maxlength="12" placeholder="Name" autocomplete="off" enterkeyhint="done"><input id="edNum" maxlength="3" placeholder="#" autocomplete="off" enterkeyhint="done"></div>
+  </div>
+  <div class="hsec ed"><h3><span class="e">👕</span>Kit &amp; size</h3>
+    <div class="swatches" id="edKits"></div>
+    <div class="seg" id="edSize"></div>
+  </div>
+  <div class="hsec ed"><h3><span class="e">📊</span>Skills<span class="pts" id="edPts"></span></h3>
+    <p class="edsmall">Everyone gets the same number of skill points. Raise one skill and the others drop to make room, so pick what you're best at!</p>
+    <div id="edStats"></div>
+    <button class="btn ghost small" id="edEven">⚖️ Even it out</button>
+  </div>
+  <div class="ederr" id="edErr"></div>
+  <div class="stack" style="margin-bottom:10px"><button class="btn" id="edSave">Save player ✅</button><button class="btn ghost hidden" id="edDelete">🗑️ Delete player</button></div>
+</div>
+
 <!-- HOW TO PLAY -->
 <div class="screen solid help hidden" id="scHelp">
   <div class="hd"><h2>How to Play</h2><button class="btn" id="btnHelpDone">Done</button></div>
@@ -323,6 +380,16 @@ h2{margin:0;font-weight:900;font-style:italic;font-size:clamp(26px,7vw,40px);let
       <li><b>Too slow?</b> Wait more than about <b>6 seconds</b> to shoot and a dog comes for the ball. Shoot before she gets there! If she wins, she noses it into the net herself: <b>"Izzy scores!"</b></li>
     </ul>
     <div class="tip">🐾 A dog block or a dog goal counts as a <b>miss</b> for the shooter.</div>
+  </div>
+
+  <div class="hsec"><h3><span class="e">➕</span>Add Your Own Player</h3>
+    <ul>
+      <li>On the player-pick screen, scroll the cards sideways and tap <b>➕ New Player</b>.</li>
+      <li><b>Take a selfie</b> (or choose a photo), then drag and zoom so your face fits the oval. That's your head in the game!</li>
+      <li>Pick a name, a shirt number, a kit colour and a size.</li>
+      <li><b>Share out your skill points.</b> Everyone gets the same total, so if you push <b>Power</b> up, the other skills go down to make room. Keep adjusting until it feels like you.</li>
+      <li>Tap <b>✏️</b> on your card any time to change it, or delete it. Players are saved on this phone.</li>
+    </ul>
   </div>
 
   <div class="hsec"><h3><span class="e">🔊</span>Buttons &amp; Settings</h3>
@@ -397,6 +464,27 @@ const settings = Object.assign({diff:1, sound:true, haptics:true, aim:true}, sto
 const saveSettings=()=>store.set('settings',settings);
 const savedNames = store.get('names',{}); PLAYERS.forEach(p=>{ if(savedNames[p.id]) p.name=savedNames[p.id]; });
 const faceImg = {}; PLAYERS.forEach(p=>{ const i=new Image(); i.src=FACES[p.id]; faceImg[p.id]=i; });
+
+// ---------- custom players (selfie + chosen skills), saved in localStorage ----------
+const SKILLS=[['power','Power'],['accuracy','Accuracy'],['curve','Curve'],['keeping','Keeping']], ST_MIN=40, ST_MAX=99, ST_TOTAL=320, CUSTOM_MAX=8;
+const KITS=['#e63946','#ff8a1f','#ffd21f','#2fc46a','#14b8a6','#36a3ff','#1f4fd1','#7b3fe4','#ff5fa2','#222831','#f4f4f4'];
+const SIZES=[{k:'s',label:'Small',height:1.0,headR:.215},{k:'m',label:'Medium',height:1.2,headR:.2},{k:'l',label:'Tall',height:1.4,headR:.185}];
+const hexRGB=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16)), rgbHex=a=>'#'+a.map(v=>Math.round(clamp(v,0,255)).toString(16).padStart(2,'0')).join('');
+const shade=(h,f)=>rgbHex(hexRGB(h).map(v=>v*f)), lum=h=>{ const [r,g,b]=hexRGB(h); return (.299*r+.587*g+.114*b)/255; };
+function traitFor(st){ const v=SKILLS.map(([k])=>st[k]), mx=Math.max(...v), mn=Math.min(...v);
+  if(mx-mn<12) return 'Does a bit of everything.';
+  return {power:'Big boot. Hits it hard.',accuracy:'Picks out the corners.',curve:'Bends it like a banana.',keeping:'A brick wall in goal.'}[SKILLS[v.indexOf(mx)][0]]; }
+function customToPlayer(r){ const sz=SIZES.find(z=>z.k===r.size)||SIZES[1], dark=lum(r.shirt)<.5;
+  return {id:r.id, custom:true, name:r.name, num:r.num||'?', hair:r.hair, hair2:shade(r.hair,.78), skin:r.skin, neck:shade(r.skin,.86), chin:.885,
+    collar:shade(r.shirt,.62), shirt:r.shirt, shirt2:shade(r.shirt,.8), shorts:r.shirt==='#222831'?'#f4f4f4':'#151a40', socks:r.shirt, shoes:'#f2f2f2',
+    numCol:lum(r.shirt)>.6?'#151a40':'#ffffff', height:sz.height, headR:sz.headR,
+    power:r.stats.power, accuracy:r.stats.accuracy, curve:r.stats.curve, keeping:r.stats.keeping, trait:traitFor(r.stats)}; }
+let customRecs=store.get('custom',[]); if(!Array.isArray(customRecs)) customRecs=[];
+const customCount=()=>PLAYERS.filter(p=>p.custom).length;
+function installCustom(r){ const p=customToPlayer(r), i=PLAYERS.findIndex(q=>q.id===r.id); if(i>=0) PLAYERS[i]=p; else PLAYERS.push(p);
+  FACES[r.id]=r.photo; const im=new Image(); im.src=r.photo; faceImg[r.id]=im; return p; }
+customRecs.forEach(r=>{ try{ installCustom(r); }catch(e){} });
+function saveCustomRecs(){ try{ localStorage.setItem('bys_custom',JSON.stringify(customRecs)); return true; }catch(e){ return false; } }
 // Android etc: navigator.vibrate. iPhone (Safari, Brave, every iOS browser) has no vibrate API; on iOS 18+ toggling a
 // hidden <input type=checkbox switch> via its label plays the system haptic tick, so a pattern becomes one tick per pulse.
 function iosTick(){ try{ const l=document.createElement('label'); l.ariaHidden='true'; l.style.display='none';
@@ -1067,7 +1155,7 @@ function drawKidBack(g,p,fx,fy,sc,anim){
   [-1,1].forEach(s=>{ const sw=run*Math.sin(ph+(s>0?Math.PI:0))*.1 + (kick>0?s*.08:0); limb(g,X(s*.14),Y(.6),X(s*.2),Y(.5+sw*.5),X(s*.23),Y(.4+sw),.07*h,p.shirt,p.skin); });
   // torso + number
   g.fillStyle=p.shirt; g.beginPath(); g.moveTo(X(-.16),Y(.64)); g.lineTo(X(.16),Y(.64)); g.lineTo(X(.14),Y(.39)); g.lineTo(X(-.14),Y(.39)); g.closePath(); g.fill();
-  g.fillStyle=p.shirt===('#ffd21f')?'#1f4fd1':'#ffd23f'; g.textAlign='center'; g.textBaseline='middle';
+  g.fillStyle=p.numCol||(p.shirt===('#ffd21f')?'#1f4fd1':'#ffd23f'); g.textAlign='center'; g.textBaseline='middle';
   g.font=`900 ${Math.round(.15*h)}px system-ui,sans-serif`; g.fillText(String(p.num),X(0),Y(.48));
   if(h>140){ g.font=`900 ${Math.round(.045*h)}px system-ui,sans-serif`; g.fillText(p.name.toUpperCase(),X(0),Y(.58)); }
   // head (back): hair
@@ -1363,8 +1451,8 @@ window.addEventListener('keydown',e=>{
 // =========================================================
 //  UI
 // =========================================================
-const screens=['scTitle','scSelect','scPass','scPause','scSettings','scResult','scHelp'];
-function showScreen(name){ S.screen=name; const map={title:'scTitle',select:'scSelect',pass:'scPass',settings:'scSettings',result:'scResult',help:'scHelp'};
+const screens=['scTitle','scSelect','scPass','scPause','scSettings','scResult','scHelp','scEdit'];
+function showScreen(name){ S.screen=name; const map={title:'scTitle',select:'scSelect',pass:'scPass',settings:'scSettings',result:'scResult',help:'scHelp',edit:'scEdit'};
   screens.forEach(id=>$(id).classList.toggle('hidden',map[name]!==id)); if(name!=='game'&&name!=='pass') $('hud').classList.add('hidden'); }
 function bg(el,p){ el.style.backgroundImage=`url(${FACES[p.id]})`; }
 function banner(a,b){ $('bn1').textContent=a; $('bn2').textContent=b||''; const el=$('banner'); el.classList.remove('show'); void el.offsetWidth; el.classList.add('show'); }
@@ -1404,7 +1492,7 @@ function openSelect(mode){
   $('selTitle').textContent=mode==='pnp'?'Pick 2 shooters':'Choose your player';
   $('oppLbl').classList.toggle('hidden',mode!=='cpu'); $('opps').classList.toggle('hidden',mode!=='cpu');
   $('diffLbl').classList.toggle('hidden',mode==='target'); $('diffSeg').classList.toggle('hidden',mode==='target');
-  sel={me:store.get('lastMe','ace'), opp:'rnd', p1:null, p2:null};
+  sel={me:byId(store.get('lastMe','ace'))?store.get('lastMe','ace'):'ace', opp:'rnd', p1:null, p2:null};
   renderCards();
 }
 function renderCards(){
@@ -1419,12 +1507,15 @@ function renderCards(){
     d.innerHTML=`${badge}<div class="face" style="background-image:url(${FACES[p.id]})"></div><div class="nm"><span>${esc(p.name)} <small style="opacity:.55">#${p.num}</small></span><button class="edit" aria-label="Rename">✏️</button></div>
       <div class="trait">${p.trait}</div>${st('Power',p.power)}${st('Accuracy',p.accuracy)}${st('Curve',p.curve)}${st('Keeping',p.keeping)}`;
     d.onclick=e=>{ sfx('click');
-      if(e.target.closest('.edit')){ openName(p); return; }
+      if(e.target.closest('.edit')){ if(p.custom) openEditor(p); else openName(p); return; }
       if(S.mode==='pnp'){ if(sel.p1===p.id) sel.p1=null; else if(sel.p2===p.id) sel.p2=null; else if(!sel.p1) sel.p1=p.id; else if(!sel.p2) sel.p2=p.id; else sel.p2=p.id; }
       else { sel.me=p.id; if(sel.opp===p.id) sel.opp='rnd'; }
       renderCards(); };
     c.appendChild(d);
   });
+  if(customCount()<CUSTOM_MAX){ const a=document.createElement('div'); a.className='card add';
+    a.innerHTML='<div class="plus">+</div><div class="nm">New Player</div><small>Take a selfie &amp;<br>pick your skills</small>';
+    a.onclick=()=>{ sfx('click'); openEditor(null); }; c.appendChild(a); }
   // opponents
   const o=$('opps'); o.innerHTML='';
   const r=document.createElement('div'); r.className='opp rnd'+(sel.opp==='rnd'?' sel':''); r.textContent='?'; r.onclick=()=>{sel.opp='rnd'; sfx('click'); renderCards();}; o.appendChild(r);
@@ -1443,15 +1534,113 @@ function saveName(){ const v=$('nameInput').value.trim().slice(0,12); if(v&&name
 $('nameSave').onclick=saveName; $('nameInput').addEventListener('keydown',e=>{ if(e.key==='Enter') saveName(); });
 $('nameModal').addEventListener('click',e=>{ if(e.target.id==='nameModal') $('nameModal').classList.add('hidden'); });
 
+// ---------- player editor ----------
+let ed=null;
+const edCv=()=>$('edCrop');
+function evenStats(){ const o={}; SKILLS.forEach(([k])=>o[k]=ST_TOTAL/4); return o; }
+// set one skill and push the difference onto the others, in proportion to the room each has (keeps their shape)
+function setSkill(st,k,v){
+  const others=SKILLS.map(q=>q[0]).filter(q=>q!==k);
+  v=Math.round(clamp(v,Math.max(ST_MIN,ST_TOTAL-3*ST_MAX),Math.min(ST_MAX,ST_TOTAL-3*ST_MIN)));
+  st[k]=v; let need=(ST_TOTAL-v)-others.reduce((a,q)=>a+st[q],0);
+  for(let guard=0; need && guard<6; guard++){
+    const dir=Math.sign(need), room=q=>dir>0?ST_MAX-st[q]:st[q]-ST_MIN, rooms=others.map(room), tot=rooms.reduce((a,b)=>a+b,0); if(!tot) break;
+    const take=Math.min(Math.abs(need),tot), share=rooms.map(r=>take*r/tot), fl=share.map(Math.floor); let left=take-fl.reduce((a,b)=>a+b,0);
+    share.map((x,i)=>[x-fl[i],i]).sort((a,b)=>b[0]-a[0]).forEach(([f,i])=>{ if(left>0 && fl[i]<rooms[i]){ fl[i]++; left--; } });
+    others.forEach((q,i)=>{ st[q]+=dir*fl[i]; need-=dir*fl[i]; });
+  }
+}
+function renderStats(){
+  const box=$('edStats'); if(!box.children.length){
+    box.innerHTML=SKILLS.map(([k,l])=>`<div class="srow" data-k="${k}"><b>${l}</b><button class="pm" data-d="-1" aria-label="Less ${l}">−</button><input type="range" min="${ST_MIN}" max="${ST_MAX}" step="1"><button class="pm" data-d="1" aria-label="More ${l}">+</button><span class="v"></span></div>`).join('');
+    box.querySelectorAll('.srow').forEach(row=>{ const k=row.dataset.k, inp=row.querySelector('input');
+      inp.addEventListener('input',()=>{ setSkill(ed.stats,k,+inp.value); renderStats(); });
+      row.querySelectorAll('.pm').forEach(b=>b.onclick=()=>{ setSkill(ed.stats,k,ed.stats[k]+(+b.dataset.d)*3); sfx('click'); renderStats(); }); }); }
+  box.querySelectorAll('.srow').forEach(row=>{ const k=row.dataset.k, v=ed.stats[k]; const inp=row.querySelector('input'); if(+inp.value!==v) inp.value=v; row.querySelector('.v').textContent=v; });
+  $('edPts').textContent=`${SKILLS.reduce((a,[k])=>a+ed.stats[k],0)} points`;
+}
+function renderKits(){ $('edKits').innerHTML=KITS.map(c=>`<div class="sw${ed.shirt===c?' on':''}" data-c="${c}" style="background:${c}"></div>`).join('');
+  $('edKits').querySelectorAll('.sw').forEach(w=>w.onclick=()=>{ ed.shirt=w.dataset.c; sfx('click'); renderKits(); });
+  $('edSize').innerHTML=SIZES.map(z=>`<button data-k="${z.k}" class="${ed.size===z.k?'on':''}">${z.label}</button>`).join('');
+  $('edSize').querySelectorAll('button').forEach(b=>b.onclick=()=>{ ed.size=b.dataset.k; sfx('click'); renderKits(); }); }
+function openEditor(p){
+  const r=p?customRecs.find(x=>x.id===p.id):null;
+  ed={id:r?r.id:null, img:null, crop:{z:1,ox:0,oy:0}, shirt:r?r.shirt:KITS[(customCount()*3+5)%KITS.length], size:r?r.size:'m',
+      stats:r?Object.assign({},r.stats):evenStats(), photo:r?r.photo:null};
+  $('edTitle').textContent=r?'Edit Player':'New Player'; $('edName').value=r?r.name:''; $('edNum').value=r?r.num:'';
+  $('edDelete').classList.toggle('hidden',!r); $('edErr').textContent=''; $('edZoom').value=1;
+  if(r){ const im=new Image(); im.onload=()=>{ ed.img=im; drawCrop(); }; im.src=r.photo; }
+  renderKits(); renderStats(); drawCrop(); showScreen('edit'); $('scEdit').scrollTop=0;
+}
+// crop view: the photo is drawn to "cover" the square, then zoom z and offset (ox,oy) in view units (0..1)
+function cropRect(img,S,c){ const k=Math.max(S/img.naturalWidth,S/img.naturalHeight)*c.z, w=img.naturalWidth*k, h=img.naturalHeight*k;
+  return {x:(S-w)/2+c.ox*S, y:(S-h)/2+c.oy*S, w, h}; }
+const OVAL={cx:.5,cy:.47,rx:.36,ry:.43};
+function drawCrop(){
+  const cv=edCv(), g=cv.getContext('2d'), S=cv.width; g.fillStyle='#fff'; g.fillRect(0,0,S,S);
+  const has=!!(ed&&ed.img); $('edHint').style.display=has?'none':'flex'; $('edZoomRow').classList.toggle('hidden',!has); $('edDragHint').classList.toggle('hidden',!has);
+  if(has){ const r=cropRect(ed.img,S,ed.crop); g.drawImage(ed.img,r.x,r.y,r.w,r.h); }
+  g.save(); g.fillStyle=has?'rgba(10,16,46,.55)':'rgba(10,16,46,.08)'; g.beginPath(); g.rect(0,0,S,S);
+  g.ellipse(OVAL.cx*S,OVAL.cy*S,OVAL.rx*S,OVAL.ry*S,0,0,7); g.fill('evenodd');
+  g.setLineDash([S*.03,S*.02]); g.lineWidth=S*.008; g.strokeStyle=has?'#ffd23f':'rgba(18,26,61,.35)'; g.beginPath(); g.ellipse(OVAL.cx*S,OVAL.cy*S,OVAL.rx*S,OVAL.ry*S,0,0,7); g.stroke(); g.restore();
+}
+// final head: 200px PNG, oval with a soft edge (chin near the bottom), plus skin and hair colours sampled from the photo
+function makeFace(){
+  const S=200, cv=document.createElement('canvas'); cv.width=cv.height=S; const g=cv.getContext('2d');
+  const r=cropRect(ed.img,S,ed.crop); g.drawImage(ed.img,r.x,r.y,r.w,r.h);
+  const id=g.getImageData(0,0,S,S), d=id.data;
+  const avg=(x0,x1,y0,y1)=>{ let a=[0,0,0],n=0; for(let y=Math.floor(y0*S);y<y1*S;y++) for(let x=Math.floor(x0*S);x<x1*S;x++){ const i=(y*S+x)*4; a[0]+=d[i];a[1]+=d[i+1];a[2]+=d[i+2];n++; } return a.map(v=>v/Math.max(1,n)); };
+  const c1=avg(.31,.39,.55,.64), c2=avg(.61,.69,.55,.64), skin=rgbHex(c1.map((v,i)=>(v+c2[i])/2)), hair=rgbHex(avg(.42,.58,.07,.13));
+  for(let y=0;y<S;y++) for(let x=0;x<S;x++){ const u=((x+.5)/S-OVAL.cx)/OVAL.rx, v=((y+.5)/S-OVAL.cy)/OVAL.ry, q=Math.sqrt(u*u+v*v);
+    d[(y*S+x)*4+3]=Math.round(255*clamp((1-q)/.06,0,1)); }
+  g.putImageData(id,0,0); return {photo:cv.toDataURL('image/png'), skin, hair};
+}
+function loadPhotoFile(f){ if(!f) return; const url=URL.createObjectURL(f), im=new Image();
+  im.onload=()=>{ ed.img=im; ed.crop={z:1,ox:0,oy:0}; $('edZoom').value=1; $('edErr').textContent=''; drawCrop(); };
+  im.onerror=()=>{ $('edErr').textContent='Could not open that photo. Try another one.'; }; im.src=url; }
+['edCam','edFile'].forEach(id=>$(id).addEventListener('change',e=>{ loadPhotoFile(e.target.files&&e.target.files[0]); e.target.value=''; }));
+$('edZoom').addEventListener('input',e=>{ if(!ed||!ed.img) return; ed.crop.z=+e.target.value; drawCrop(); });
+(()=>{ const cv=edCv(), pts=new Map(); let pinch=null;
+  cv.addEventListener('pointerdown',e=>{ if(!ed||!ed.img) return; cv.setPointerCapture(e.pointerId); pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+    if(pts.size===2){ const [a,b]=[...pts.values()]; pinch={d:Math.hypot(a.x-b.x,a.y-b.y),z:ed.crop.z}; } });
+  cv.addEventListener('pointermove',e=>{ if(!pts.has(e.pointerId)||!ed||!ed.img) return; const prev=pts.get(e.pointerId), cur={x:e.clientX,y:e.clientY}; pts.set(e.pointerId,cur);
+    const W=cv.getBoundingClientRect().width;
+    if(pts.size===2 && pinch){ const [a,b]=[...pts.values()]; ed.crop.z=clamp(pinch.z*Math.hypot(a.x-b.x,a.y-b.y)/Math.max(10,pinch.d),1,4); $('edZoom').value=ed.crop.z; }
+    else if(pts.size===1){ ed.crop.ox+=(cur.x-prev.x)/W; ed.crop.oy+=(cur.y-prev.y)/W; }
+    ed.crop.ox=clamp(ed.crop.ox,-.5*ed.crop.z,.5*ed.crop.z); ed.crop.oy=clamp(ed.crop.oy,-.5*ed.crop.z,.5*ed.crop.z); drawCrop(); });
+  const up=e=>{ pts.delete(e.pointerId); if(pts.size<2) pinch=null; }; cv.addEventListener('pointerup',up); cv.addEventListener('pointercancel',up);
+  cv.addEventListener('wheel',e=>{ if(!ed||!ed.img) return; e.preventDefault(); ed.crop.z=clamp(ed.crop.z*(e.deltaY<0?1.06:1/1.06),1,4); $('edZoom').value=ed.crop.z; drawCrop(); },{passive:false});
+})();
+$('edEven').onclick=()=>{ ed.stats=evenStats(); sfx('click'); renderStats(); };
+$('edCancel').onclick=()=>{ sfx('click'); showScreen('select'); renderCards(); };
+$('edSave').onclick=()=>{
+  const name=$('edName').value.trim().slice(0,12), num=$('edNum').value.trim().slice(0,3);
+  if(!ed.img){ $('edErr').textContent='📸 Add a photo first!'; return; }
+  if(!name){ $('edErr').textContent='🏷️ Give your player a name!'; $('edName').focus(); return; }
+  const f=makeFace(), id=ed.id||('c'+Date.now().toString(36));
+  const rec={id, name, num, shirt:ed.shirt, size:ed.size, stats:Object.assign({},ed.stats), photo:f.photo, skin:f.skin, hair:f.hair};
+  const i=customRecs.findIndex(x=>x.id===id), backup=customRecs.slice(); if(i>=0) customRecs[i]=rec; else customRecs.push(rec);
+  if(!saveCustomRecs()){ customRecs=backup; $('edErr').textContent='Not enough space on this phone to save another player.'; return; }
+  installCustom(rec); sfx('cheer');
+  if(S.mode==='pnp'){ if(!sel.p1) sel.p1=id; else if(!sel.p2 && sel.p1!==id) sel.p2=id; } else sel.me=id;
+  showScreen('select'); renderCards(); requestAnimationFrame(()=>{ const c=$('cards'); c.scrollLeft=c.scrollWidth; });
+};
+$('edDelete').onclick=()=>{ const r=customRecs.find(x=>x.id===ed.id); if(!r || !confirm(`Delete ${r.name}? This can't be undone.`)) return;
+  customRecs=customRecs.filter(x=>x.id!==r.id); saveCustomRecs(); const i=PLAYERS.findIndex(q=>q.id===r.id); if(i>=0) PLAYERS.splice(i,1);
+  delete FACES[r.id]; delete faceImg[r.id];
+  if(store.get('lastMe')===r.id) store.set('lastMe','ace');
+  ['me','p1','p2','opp'].forEach(k=>{ if(sel[k]===r.id) sel[k]= k==='me'?'ace':k==='opp'?'rnd':null; });
+  sfx('click'); showScreen('select'); renderCards(); };
+
 function beginFromSelect(){
-  if(S.mode==='pnp'){ if(!(sel.p1&&sel.p2)) return; S.A=byId(sel.p1); S.B=byId(sel.p2); S.K=PLAYERS.find(p=>p.id!==sel.p1&&p.id!==sel.p2); }
+  if(S.mode==='pnp'){ if(!(sel.p1&&sel.p2)) return; S.A=byId(sel.p1); S.B=byId(sel.p2); const ks=PLAYERS.filter(p=>p.id!==sel.p1&&p.id!==sel.p2), ko=ks.filter(p=>!p.custom); S.K=(ko.length?ko:ks)[Math.random()*(ko.length||ks.length)|0]; }
   else { S.A=byId(sel.me); store.set('lastMe',sel.me); const others=PLAYERS.filter(p=>p.id!==sel.me);
     S.B = sel.opp==='rnd'||sel.opp===sel.me ? others[Math.random()*others.length|0] : byId(sel.opp);
     S.K = S.mode==='target' ? others[Math.random()*others.length|0] : S.B; }
   titleKeeper=null; startMatch();
 }
 function showPass(p,cb){
-  S.screen='pass'; $('hud').classList.add('hidden'); ['scTitle','scSelect','scPause','scSettings','scResult'].forEach(id=>$(id).classList.add('hidden'));
+  S.screen='pass'; $('hud').classList.add('hidden'); screens.forEach(id=>{ if(id!=='scPass') $(id).classList.add('hidden'); });
   $('scPass').classList.remove('hidden'); bg($('passFace'),p); $('passName').textContent=p.name;
   const n=(S.side==='A'?S.res.A:S.res.B).length; $('passInfo').textContent=`Kick ${n+1}${n>=5?' · Sudden death':''} · ${S.K.name} is in goal`;
   keeper=makeKeeper(S.K,false); ball=newBall(); shooter=null; cam=CAMS.shoot; S.phase='idle';
@@ -1513,7 +1702,7 @@ document.addEventListener('visibilitychange',()=>{ if(document.hidden && S.scree
 
 function goTitle(){
   showScreen('title'); hideHint(); resetDogs(); cam=CAMS.shoot; shooter=null; S.phase='idle'; S.outcome=null; ball=newBall();
-  titleKeeper=makeKeeper(PLAYERS[Math.random()*3|0],false); keeper=null;
+  titleKeeper=makeKeeper(PLAYERS[Math.random()*PLAYERS.length|0],false); keeper=null;
 }
 
 // ---------- boot ----------
